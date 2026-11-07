@@ -1,0 +1,27 @@
+{
+  "name": "TaskOps",
+  "short_name": "TaskOps",
+  "description": "One Step Greener — shared task manager",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a6a87",
+  "theme_color": "#0a6a87",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "lang": "en-GB",
+  "dir": "ltr"
+}

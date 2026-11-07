@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TaskOps">
+<meta name="theme-color" content="#0a6a87">
+<title>TaskOps</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --accent:#0a6a87;
+    --accent-dark:#075e78;
+    --bg:#0a6a87;
+    --splash-dur:.45s;
+  }
+  html,body{
+    height:100%;
+    width:100%;
+    overflow:hidden;
+    background:var(--bg);
+  }
+
+  /* ── Splash screen ── */
+  #splash{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;
+    background:var(--accent);
+    z-index:10;
+    transition:opacity var(--splash-dur) ease, transform var(--splash-dur) ease;
+  }
+  #splash.hide{opacity:0;transform:scale(1.04);pointer-events:none}
+  #splash svg{width:72px;height:72px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.25))}
+  #splash h1{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size:28px;font-weight:700;letter-spacing:.04em;color:#fff;
+  }
+  #splash p{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size:13px;color:rgba(255,255,255,.65);letter-spacing:.06em;text-transform:uppercase;
+  }
+  .spinner{
+    width:32px;height:32px;
+    border:3px solid rgba(255,255,255,.25);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    margin-top:8px;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── App frame ── */
+  #frame{
+    position:fixed;inset:0;
+    width:100%;height:100%;
+    border:none;
+    display:block;
+    background:#fff;
+    /* Extend under safe-area on iPhone */
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    padding-left:env(safe-area-inset-left,0px);
+    padding-right:env(safe-area-inset-right,0px);
+  }
+
+  /* Offline notice */
+  #offline{
+    position:fixed;bottom:env(safe-area-inset-bottom,16px);
+    left:50%;transform:translateX(-50%);
+    background:#1a1a1a;color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-size:13px;padding:8px 18px;border-radius:20px;
+    display:none;z-index:20;white-space:nowrap;
+    box-shadow:0 4px 16px rgba(0,0,0,.35);
+  }
+  #offline.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="splash">
+  <!-- Simple task-list icon in SVG (matches app accent) -->
+  <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="72" height="72" rx="18" fill="rgba(255,255,255,0.15)"/>
+    <!-- Row 1 – done -->
+    <circle cx="20" cy="26" r="6" fill="#fff"/>
+    <polyline points="17,26 19.5,28.5 23,24" stroke="#0a6a87" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="31" y="23" width="22" height="6" rx="3" fill="#fff"/>
+    <!-- Row 2 – in progress -->
+    <circle cx="20" cy="40" r="6" fill="rgba(255,255,255,0.4)" stroke="#fff" stroke-width="1.5"/>
+    <rect x="31" y="37" width="22" height="6" rx="3" fill="rgba(255,255,255,0.75)"/>
+    <!-- Row 3 – pending -->
+    <circle cx="20" cy="54" r="6" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.5"/>
+    <rect x="31" y="51" width="16" height="6" rx="3" fill="rgba(255,255,255,0.45)"/>
+  </svg>
+  <h1>TaskOps</h1>
+  <p>One Step Greener</p>
+  <div class="spinner" id="spinner"></div>
+</div>
+
+<!-- The GAS app -->
+<iframe
+  id="frame"
+  src="https://script.google.com/a/macros/onestepgreener.org/s/AKfycbzqoiQmN4aKXjocgGlZzNjQGKD-H5-nmZuZSp-GCfzhfm0GCPPp9orGpW6oahXPwkZfFg/exec"
+  title="TaskOps"
+  allow="forms"
+  loading="eager"
+></iframe>
+
+<div id="offline">⚠ No internet connection</div>
+
+<script>
+  const splash = document.getElementById('splash');
+  const frame  = document.getElementById('frame');
+  const offline = document.getElementById('offline');
+
+  // Hide splash once iframe has loaded (or after 8s max)
+  function hideSplash(){
+    splash.classList.add('hide');
+    setTimeout(() => { splash.hidden = true; }, 500);
+  }
+  frame.addEventListener('load', hideSplash);
+  setTimeout(hideSplash, 8000);
+
+  // Offline / online banner
+  function updateOnline(){
+    offline.classList.toggle('show', !navigator.onLine);
+  }
+  window.addEventListener('online',  updateOnline);
+  window.addEventListener('offline', updateOnline);
+  updateOnline();
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
